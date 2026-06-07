@@ -27,37 +27,21 @@ Rolling conventions
 
 Usage
 -----
-    import pandas_market_calendars as mcal
-    import pandas as pd
-    from underlying_calendar import TradingCalendar
+    from underlying_calendar import SPX_CALENDAR, TradingCalendar
 
-    nyse  = mcal.get_calendar("NYSE")
-    sched = nyse.schedule("2020-01-01", "2030-12-31")
+    SPX_CALENDAR.is_trading_day("2026-07-04")   # False — Independence Day
+    SPX_CALENDAR.market_open("2026-07-06")       # "2026-07-06T13:30:00+00:00"
+    SPX_CALENDAR.market_close("2026-07-03")      # "2026-07-03T17:00:00+00:00" (early)
 
-    all_days = set(pd.date_range("2020-01-01", "2030-12-31").strftime("%Y-%m-%d"))
-    trade    = set(sched.index.strftime("%Y-%m-%d"))
-    weekends = {d for d in all_days if pd.Timestamp(d).weekday() >= 5}
-    holidays = tuple(all_days - trade - weekends)
-
-    early_close_days = tuple(
-        row.name.strftime("%Y-%m-%d")
-        for _, row in sched.iterrows()
-        if row["market_close"].hour < 20   # before 20:00 UTC = before 16:00 ET
-    )
-
-    spx_cal = TradingCalendar(
+    cal = TradingCalendar(
         weekends=(5, 6),
-        holidays=holidays,
+        holidays=("2026-01-01", "2026-12-25"),
         timezone="America/New_York",
         open_time="09:30",
         close_time="16:00",
-        early_close_days=early_close_days,
+        early_close_days=("2026-07-03",),
         early_close_time="13:00",
     )
-
-    spx_cal.market_open("2026-05-16")    # → "2026-05-16T13:30:00+00:00"
-    spx_cal.market_close("2026-05-16")   # → "2026-05-16T20:00:00+00:00"
-    spx_cal.market_close("2026-07-03")   # → "2026-07-03T17:00:00+00:00"  (early)
 """
 
 from __future__ import annotations
@@ -276,10 +260,12 @@ class TradingCalendar:
         return _parse(date).weekday() in self._weekends
 
     def is_holiday(self, date: str) -> bool:
+        _parse(date)
         return date in self._holidays
 
     def is_early_close(self, date: str) -> bool:
         """Return True if *date* is an early close day."""
+        _parse(date)
         return date in self._early_close_days
 
     def is_trading_day(self, date: str) -> bool:
@@ -337,9 +323,16 @@ class TradingCalendar:
         Advance *date* by *n* trading days (*n* may be negative).
 
         *date* itself is not counted; movement starts from the next/previous day.
+        When *n* is 0, *date* is returned unchanged but must be a trading day.
         """
         if not isinstance(n, int):
             raise TypeError(f"n must be an int, got {type(n)}")
+        if n == 0:
+            if not self.is_trading_day(date):
+                raise ValueError(
+                    f"add_trading_days called with n=0 but {date!r} is not a trading day."
+                )
+            return date
         d = _parse(date)
         step = 1 if n >= 0 else -1
         remaining = abs(n)
@@ -375,6 +368,12 @@ class TradingCalendar:
         ValueError
             If *end* is before or equal to *start*.
  
+        Notes
+        -----
+        Runs in O(n) time where n is the number of calendar days between
+        *start* and *end*. Suitable for ranges up to a few years; for very
+        large ranges consider caching a pre-built schedule instead.
+
         Examples
         --------
             # Monday to Wednesday → 2 (Tue, Wed)
@@ -443,15 +442,15 @@ class TradingCalendar:
         return self._roll_following(d)
 
     def _roll_following(self, d: datetime.date) -> str:
-        d += datetime.timedelta(days=1)
+        d = d + datetime.timedelta(days=1)
         while d.weekday() in self._weekends or _fmt(d) in self._holidays:
-            d += datetime.timedelta(days=1)
+            d = d + datetime.timedelta(days=1)
         return _fmt(d)
 
     def _roll_previous(self, d: datetime.date) -> str:
-        d -= datetime.timedelta(days=1)
+        d = d - datetime.timedelta(days=1)
         while d.weekday() in self._weekends or _fmt(d) in self._holidays:
-            d -= datetime.timedelta(days=1)
+            d = d - datetime.timedelta(days=1)
         return _fmt(d)
 
     # ------------------------------------------------------------------
@@ -489,7 +488,7 @@ class TradingCalendar:
 
     def __repr__(self) -> str:
         early = (
-            f"early_close={self.early_close_time} "
+            f"early_close='{self.early_close_time}' "
             f"({len(self._early_close_days)} dates)"
             if self._early_close_days else "no early closes"
         )
