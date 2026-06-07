@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "underlying_calendar"
+version = "0.1.0"
+description = "Lean trading calendars — market hours, holidays, early closes, and date arithmetic."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+keywords = ["trading", "calendar", "market", "finance", "holidays"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/underlying_calendar"
+Repository = "https://github.com/your-username/underlying_calendar"
+Issues = "https://github.com/your-username/underlying_calendar/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["underlying_calendar*"]
