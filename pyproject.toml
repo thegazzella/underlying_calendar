@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
 
 [project]
 name = "underlying_calendar"
@@ -9,6 +9,9 @@ description = "Lean trading calendars — market hours, holidays, early closes, 
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.9"
+dependencies = [
+    "tzdata",
+]
 keywords = ["trading", "calendar", "market", "finance", "holidays"]
 classifiers = [
     "Development Status :: 3 - Alpha",
