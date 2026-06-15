@@ -28,10 +28,6 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-username/underlying_calendar"
-Repository = "https://github.com/your-username/underlying_calendar"
-Issues = "https://github.com/your-username/underlying_calendar/issues"
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["underlying_calendar*"]
+Homepage = "https://github.com/thegazzella/underlying_calendar"
+Repository = "https://github.com/thegazzella/underlying_calendar"
+Issues = "https://github.com/thegazzella/underlying_calendar/issues"
